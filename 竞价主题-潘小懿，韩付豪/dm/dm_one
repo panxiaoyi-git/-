@@ -1,0 +1,193 @@
+
+drop table  if exists dm_release.dm_target_group_one;
+
+create table dm_release.dm_target_group_one(
+aid_con_one                         string,
+aid_con_two                         string,
+aid_con_three                        string,
+total_bidding                    string,
+total_bidding_PMP                string,
+total_bidding_RTB                string,
+total_bidding_RTB_success        string,
+total_bidding_RTB_failure        string,
+RTB_succes_pre                   string,
+RTB_failure_pre                  string,
+total_RTB_pay                    string,
+RTB_pay_pre                      string,
+RTB_pay_total_pre                string
+)
+row format delimited 
+fields terminated by '\t'
+stored as orc;
+
+
+
+with a as (
+select                
+aid_con,
+sum(case when success='success' then 1 end ) as x       
+from dws_release.dws_bidding 
+group by aid_con
+order by x desc 
+limit 1) ,
+
+b as 
+(
+select                
+aid_con,
+sum(case when success='success' and bidding_type_con='RTB'  then 1 end ) as y 
+from dws_release.dws_bidding
+group by aid_con
+order by y desc 
+limit 1) ,
+c as 
+(select                
+aid_con,
+sum(case when success='failure' and bidding_type_con='RTB'  then 1 end ) as y 
+from dws_release.dws_bidding
+group by aid_con
+order by y desc
+limit 1
+),
+d as(
+select
+count(*) as total_bidding,
+count(case when bidding_type_con='PMP' then 1 end ) as total_bidding_PMP,
+count(case when bidding_type_con='RTB' then 1 end ) as total_bidding_RTB,
+count(case when bidding_type_con='RTB' and success='success' then 1 end ) as total_bidding_RTB_success,
+count(case when bidding_type_con='RTB' and success='failure' then 1 end ) as total_bidding_RTB_failure,
+round(count(case when bidding_type_con='RTB' and success='success' then 1 end )
+/count(case when bidding_type_con='RTB' then 1 end ),4) as RTB_succes_pre,
+round(count(case when bidding_type_con='RTB' and success='failure' then 1 end )
+/count(case when bidding_type_con='RTB' then 1 end ),4) as RTB_failure_pre,
+
+
+
+count(case when bidding_type_con='RTB' and paysuccess='success' then 1 end ) as total_RTB_pay,
+round(count(case when bidding_type_con='RTB' and paysuccess='success' then 1 end)/
+count(case when bidding_type_con='RTB' and success='success' then 1 end ),4) as RTB_pay_pre,
+round( count(case when bidding_type_con='RTB' and paysuccess='success' then 1 end)/
+count(case when paysuccess='success' then 1 end),4) as RTB_pay_total_pre
+
+
+
+from 
+(
+select                
+release_session       ,
+release_status_con    ,
+device_num            ,
+device_type           ,
+sources               ,
+bidding_status_con    ,
+bidding_type_con      ,
+bidding_price_con     ,
+aid_con               ,
+idcard_cn             ,
+matter_id_con         ,
+model_code_con        ,
+model_version_con     ,
+register              ,
+ct                    ,
+ctmax                 ,
+success               ,
+paysuccess            ,
+pv                    ,
+dt7                   ,
+dt15                  ,
+dt180                 ,
+bdp_day               
+from dws_release.dws_bidding )tmp
+)
+insert into table dm_release.dm_target_group_one
+select a.aid_con,b.aid_con,c.aid_con,d.* 
+from a,b,c,d
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--------------------
+drop table  if exists dm_release.dm_target_group_one;
+
+create table dm_release.dm_target_group_one(
+aid_con_one                         string,
+aid_con_two                         string,
+aid_con_three                        string,
+total_bidding                    string,
+total_bidding_PMP                string,
+total_bidding_RTB                string,
+total_bidding_RTB_success        string,
+total_bidding_RTB_failure        string,
+RTB_succes_pre                   string,
+RTB_failure_pre                  string,
+total_RTB_pay                    string,
+RTB_pay_pre                      string,
+RTB_pay_total_pre                string
+)
+row format delimited 
+fields terminated by '\t'
+stored as orc;
+
+
+
+with a as (
+select                
+aid_con,
+sum(case when success='success' then 1 end ) as x       
+from dws_release.dws_bidding 
+group by aid_con
+order by x desc 
+limit 1) ,
+
+b as 
+(
+select                
+aid_con,
+sum(case when success='success' and bidding_type_con='RTB'  then 1 end ) as y 
+from dws_release.dws_bidding
+group by aid_con
+order by y desc 
+limit 1) ,
+c as 
+(select                
+aid_con,
+sum(case when success='failure' and bidding_type_con='RTB'  then 1 end ) as y 
+from dws_release.dws_bidding
+group by aid_con
+order by y desc
+limit 1
+),
+d as(
+select
+count(*) as total_bidding,
+count(case when bidding_type_con='PMP' then 1 end ) as total_bidding_PMP,
+count(case when bidding_type_con='RTB' then 1 end ) as total_bidding_RTB,
+count(case when bidding_type_con='RTB' and success='success' then 1 end ) as total_bidding_RTB_success,
+count(case when bidding_type_con='RTB' and success='failure' then 1 end ) as total_bidding_RTB_failure,
+round(count(case when bidding_type_con='RTB' and success='success' then 1 end )
+/count(case when bidding_type_con='RTB' then 1 end ),4) as RTB_succes_pre,
+round(count(case when bidding_type_con='RTB' and success='failure' then 1 end )
+/count(case when bidding_type_con='RTB' then 1 end ),4) as RTB_failure_pre,
+
+count(case when bidding_type_con='RTB' and paysuccess='success' then 1 end ) as total_RTB_pay,
+round(count(case when bidding_type_con='RTB' and paysuccess='success' then 1 end)/
+count(case when bidding_type_con='RTB' and success='success' then 1 end ),4) as RTB_pay_pre,
+round( count(case when bidding_type_con='RTB' and paysuccess='success' then 1 end)/
+count(case when paysuccess='success' then 1 end),4) as RTB_pay_total_pre
+
+from dws_release.dws_bidding)
+select a.aid_con,b.aid_con,c.aid_con,d.* 
+from a,b,c,d
+
+
+insert into table dm_release.dm_target_group_one

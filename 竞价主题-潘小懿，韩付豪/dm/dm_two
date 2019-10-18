@@ -1,0 +1,90 @@
+
+select                
+release_session       ,
+release_status_con    ,
+device_num            ,
+device_type           ,
+sources               ,
+bidding_status_con    ,
+bidding_type_con      ,
+bidding_price_con     ,
+aid_con               ,
+idcard_cn             ,
+matter_id_con         ,
+model_code_con        ,
+model_version_con     ,
+register              ,
+ct                    ,
+ctmax                 ,
+success               ,
+paysuccess            ,
+pv                    ,
+dt7                   ,
+dt15                  ,
+dt180                 ,
+bdp_day               
+from dws_release.dws_bidding
+
+
+不同广告位的最高出价
+不同广告位的最高支付价格
+不同广告位的最低出价
+不同广告位的最低支付价格
+不同广告位的支付总额
+不同广告位RTB类型竞价成功百分比
+广告位支付价格排名
+
+
+
+with tmp as (
+select aid_con,
+max(if(success='success',bidding_price_con,0)) as max_bidding_price,
+max(if(paysuccess='success',bidding_price_con,0)) as max_pay_price,
+min(if(success='success',bidding_price_con,null)) as min_bidding_price,
+min(if(paysuccess='success',bidding_price_con,null)) as min_pay_price,
+sum(if(paysuccess='success',bidding_price_con,0)) as sum_pay_price,
+round(sum(if(success='success',1,0))/count(*),4)as RTB_success_pre
+from dws_release.dws_bidding
+group by aid_con)
+select *,
+row_number() over(distribute by aid_con sort by sum_pay_price desc ) as ranks
+from tmp 
+
+
+不同渠道、模型、广告位、类型的支付额
+不同渠道、模型、广告位、类型的竞价成功率
+select aid_con,model_version_con,sources,bidding_type_con,
+sum(case when paysuccess='success' then bidding_price_con else 0 end) as sum_pay,
+round(count(case when success='success' then 1 else null end)/count(*),4)as success_pre
+from dws_release.dws_bidding
+group by aid_con,model_version_con,sources,bidding_type_con
+with cube 
+
+
+
+千人成本 (千次曝光) CPM
+潜在客户获取成本  CPL
+点击成本
+CPH：Cost Per Hour，受众对广告的浏览 / 互动时长的成本。
+
+
+
+select 
+sum(case when paysuccess='success' then bidding_price_con else 0 end) as total_pay,
+count(case when register is not null then 1 else null end ) as total_register ,
+count (case when release_status_con like '%04%' then 1 else null end ) as total_click,
+count (case when release_status_con like '%03%' then 1 else null end) as total_Impressions,
+count(distinct matter_id_con) as total_people,
+sum(cast( ctmax as bigint)-cast( ct as bigint) ) as total_time
+from dws_release.dws_bidding
+
+
+
+
+
+
+
+
+
+
+
